@@ -404,6 +404,12 @@ export default function DashboardPage() {
             {wsConnected ? "Live" : "Offline"}
           </button>
           <Link
+            href="/swap"
+            className="px-3 py-2 uppercase tracking-wider text-xs border border-[#331111] hover:border-[#ff0033] hover:text-[#ff6666]"
+          >
+            Swap
+          </Link>
+          <Link
             href="/checkout"
             className="px-3 py-2 uppercase tracking-wider text-xs border border-[#331111] hover:border-[#ff0033] hover:text-[#ff6666]"
           >

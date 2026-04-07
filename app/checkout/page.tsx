@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { PayButton, PayKitProvider, WalletProvider } from "@coin-voyage/paykit";
+import { PayButton } from "@coin-voyage/paykit";
 import { ChainId } from "@coin-voyage/paykit/server";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useApiKeys, useWalletReady } from "../providers";
 
 const PRODUCT = { name: "Basic Tee", price: 4.0 };
 const SHIPPING_FLAT = 1.0;
@@ -37,15 +37,9 @@ const INITIAL_FORM = {
 };
 
 export default function CheckoutPage() {
-  const [apiKey, setApiKey] = useState<string | null>(null);
-  const [authChecked, setAuthChecked] = useState(false);
+  const { apiKey } = useApiKeys();
+  const walletReady = useWalletReady();
 
-  useEffect(() => {
-    setApiKey(localStorage.getItem("cv_api_key"));
-    setAuthChecked(true);
-  }, []);
-
-  if (!authChecked) return null;
   if (!apiKey) {
     return (
       <main className="min-h-screen flex items-center justify-center p-10">
@@ -72,24 +66,15 @@ export default function CheckoutPage() {
     );
   }
 
-  return (
-    <CheckoutProviders apiKey={apiKey}>
-      <CheckoutInner />
-    </CheckoutProviders>
-  );
-}
+  if (!walletReady) {
+    return (
+      <main className="min-h-screen flex items-center justify-center p-10 text-sm text-gray-500">
+        Initializing wallet…
+      </main>
+    );
+  }
 
-function CheckoutProviders({ apiKey, children }: { apiKey: string; children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient());
-  return (
-    <QueryClientProvider client={queryClient}>
-      <WalletProvider>
-        <PayKitProvider apiKey={apiKey} mode="dark">
-          {children}
-        </PayKitProvider>
-      </WalletProvider>
-    </QueryClientProvider>
-  );
+  return <CheckoutInner />;
 }
 
 function CheckoutInner() {
