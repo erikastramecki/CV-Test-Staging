@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/erikastramecki/.local/share/claude/versions/**)",
+      "Bash(git --version)",
+      "Bash(gh --version)",
+      "Bash(brew --version)",
+      "Bash(gh auth:*)"
+    ]
+  }
+}
