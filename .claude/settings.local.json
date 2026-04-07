@@ -7,7 +7,24 @@
       "Bash(brew --version)",
       "Bash(gh auth:*)",
       "Bash(/opt/homebrew/bin/brew install:*)",
-      "Bash(/opt/homebrew/bin/gh auth:*)"
+      "Bash(/opt/homebrew/bin/gh auth:*)",
+      "Bash(npm install:*)",
+      "Bash(cp .env.example .env)",
+      "Bash(npm run:*)",
+      "Bash(npx vite:*)",
+      "Bash(node server/index.js)",
+      "Bash(curl -s -X POST http://localhost:3001/webhooks/coinvoyage -H \"Content-Type: application/json\" -d '{\"type\":\"payment.completed\",\"data\":{\"id\":\"pay_TEST_E2E_001\",\"order_id\":\"ord_test_999\",\"amount\":42.50,\"currency\":\"USD\",\"crypto_amount\":0.0125,\"crypto_currency\":\"ETH\",\"network\":\"ethereum\",\"tx_hash\":\"0xtest1111111111111111111111111111111111111111111111111111111111111\",\"customer_email\":\"e2e@test.com\",\"customer_name\":\"E2E Test\"}}')",
+      "Bash(curl -s http://localhost:3001/api/transactions/pay_TEST_E2E_001)",
+      "Bash(curl:*)",
+      "Bash(kill %1)",
+      "Bash(pkill -f \"node server/index.js\")",
+      "Bash(pkill -f \"concurrently\")",
+      "Bash(pkill -f \"vite\")",
+      "Bash(pkill -f \"nodemon\")",
+      "Bash(rm:*)",
+      "Bash(node -e \"console.log\\(require\\('next/package.json'\\).version\\)\")",
+      "Bash(node -e \"console.log\\(require\\('tailwindcss/package.json'\\).version\\)\")",
+      "Bash(npx next:*)"
     ]
   }
 }

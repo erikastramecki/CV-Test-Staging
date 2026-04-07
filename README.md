@@ -13,10 +13,30 @@ Settles in **USDC on Base** by default.
 
 ```sh
 npm install
-npm run dev
+cp .env.example .env
+npm run seed     # populate sample transactions (one-time)
+npm run dev      # starts vite (5173) + express webhook server (3001)
 ```
 
 Open <http://localhost:5173>.
+
+- `/`             — Dashboard (stats, revenue chart, live activity)
+- `/transactions` — Transaction list with search, filters, pagination
+- `/transactions/:id` — Detail view (timeline, explorer link, raw events)
+- `/settings`     — Webhook URL to paste into CoinVoyage
+- `/checkout`     — Original Paykit checkout demo
+
+### Test the webhook end-to-end
+
+```sh
+curl -X POST http://localhost:3001/webhooks/coinvoyage \
+  -H "Content-Type: application/json" \
+  -d '{"type":"payment.completed","data":{"id":"pay_demo_1","amount":42.50,"currency":"USD","crypto_amount":0.0125,"crypto_currency":"ETH","network":"ethereum","tx_hash":"0xabc","customer_email":"demo@test.com","customer_name":"Demo"}}'
+```
+
+The dashboard updates instantly via Socket.io and a toast appears.
+HMAC signature verification is enabled when `COINVOYAGE_WEBHOOK_SECRET`
+is set to a real value (not the `whsec_replace_me` placeholder).
 
 The Paykit public API key lives in `.env.local`:
 
