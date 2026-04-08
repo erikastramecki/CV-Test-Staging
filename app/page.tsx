@@ -94,6 +94,18 @@ export default function AuthenticatePage() {
             >
               Checkout Demo →
             </Link>
+            <Link
+              href="/pay/receive"
+              className="block w-full text-center uppercase tracking-wider text-xs py-3 mb-3 border border-[#331111] hover:border-[#ff0033] hover:text-[#ff6666] transition"
+            >
+              Tap to Pay · Request →
+            </Link>
+            <Link
+              href="/pay/send"
+              className="block w-full text-center uppercase tracking-wider text-xs py-3 mb-3 border border-[#331111] hover:border-[#ff0033] hover:text-[#ff6666] transition"
+            >
+              Tap to Pay · Send →
+            </Link>
             <button
               onClick={clear}
               className="w-full uppercase tracking-wider text-xs py-2 text-gray-500 hover:text-[#ff6666]"

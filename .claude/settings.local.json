@@ -24,7 +24,8 @@
       "Bash(rm:*)",
       "Bash(node -e \"console.log\\(require\\('next/package.json'\\).version\\)\")",
       "Bash(node -e \"console.log\\(require\\('tailwindcss/package.json'\\).version\\)\")",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(npx --no-install tsc --noEmit)"
     ]
   }
 }
