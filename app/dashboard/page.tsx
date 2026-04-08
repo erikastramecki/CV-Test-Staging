@@ -410,6 +410,12 @@ export default function DashboardPage() {
             Swap
           </Link>
           <Link
+            href="/casino"
+            className="px-3 py-2 uppercase tracking-wider text-xs border border-[#331111] hover:border-[#ff0033] hover:text-[#ff6666]"
+          >
+            Casino
+          </Link>
+          <Link
             href="/checkout"
             className="px-3 py-2 uppercase tracking-wider text-xs border border-[#331111] hover:border-[#ff0033] hover:text-[#ff6666]"
           >

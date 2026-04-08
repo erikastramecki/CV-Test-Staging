@@ -13,6 +13,8 @@
     "@coin-voyage/paykit": "latest",
     "@coin-voyage/shared": "^2.4.0",
     "@tanstack/react-query": "^5.90.6",
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.8.0",
     "next": "^16.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
