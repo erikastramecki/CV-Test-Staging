@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
+import { recordDeposit } from "@/lib/casino-db";
 
 const BASE_URL = "https://api.coinvoyage.io/v2";
 const MAX_EVENTS = 500;
@@ -119,5 +120,38 @@ export async function POST(req: NextRequest) {
   webhookEvents.unshift(event);
   if (webhookEvents.length > MAX_EVENTS) webhookEvents.length = MAX_EVENTS;
   console.log("[webhook] received:", event.type || event.event || "unknown", event);
+
+  // If this is a completed casino deposit, credit the ledger. Idempotent via
+  // the deposits.payment_id UNIQUE constraint, so re-deliveries are safe and
+  // racing the client-side credit-deposit callback is safe.
+  try {
+    const eventType: string = event.type || event.event || "";
+    const data = event.data || event.payment || event;
+    const meta = data?.metadata || {};
+    const isCompleted =
+      eventType === "payment.completed" ||
+      eventType === "ORDER_COMPLETED" ||
+      data?.status === "COMPLETED";
+    if (isCompleted && meta?.kind === "casino_deposit" && meta?.address) {
+      const amountUsd = Number(meta.amount ?? data?.amount ?? 0);
+      const amountCents = Math.round(amountUsd * 100);
+      if (amountCents > 0) {
+        const result = recordDeposit({
+          paymentId: data.id || data.payment_id || null,
+          address: meta.address,
+          amountCents,
+          status: "credited",
+          source: "webhook",
+          rawEvent: event,
+        });
+        console.log(
+          `[webhook] casino deposit ${result.credited ? "credited" : "skipped (dupe)"}: ${meta.address} +$${amountUsd}`,
+        );
+      }
+    }
+  } catch (err) {
+    console.error("[webhook] casino credit error:", err);
+  }
+
   return NextResponse.json({ received: true });
 }
