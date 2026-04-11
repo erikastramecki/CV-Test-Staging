@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { PayButton } from "@coin-voyage/paykit";
+import { PayButton, usePayStatus } from "@coin-voyage/paykit";
 import { ChainId } from "@coin-voyage/paykit/server";
 import { useApiKeys, useWalletReady } from "../providers";
 
@@ -81,8 +81,25 @@ function CheckoutInner() {
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
+  const [payError, setPayError] = useState<string | null>(null);
+  const pendingShowRef = useRef<(() => void) | null>(null);
 
   const totals = useMemo(() => computeTotals(quantity), [quantity]);
+  const totalAmount = useMemo(() => Number(totals.total.toFixed(2)), [totals.total]);
+
+  // Readiness of the pre-created payOrder. PayButton.Custom's `show()` is a
+  // silent no-op until this is defined, so we use it to gate the click.
+  const payStatus = usePayStatus();
+  const isPayReady = payStatus !== undefined;
+
+  // If the user clicked Pay before the preload finished, fire it now.
+  useEffect(() => {
+    if (isPayReady && pendingShowRef.current) {
+      const queued = pendingShowRef.current;
+      pendingShowRef.current = null;
+      queued();
+    }
+  }, [isPayReady]);
 
   const handleChange = (name: keyof typeof INITIAL_FORM, value: string) => {
     setForm((p) => ({ ...p, [name]: value }));
@@ -99,21 +116,27 @@ function CheckoutInner() {
     const errs: Record<string, string> = {};
     if (form.email && !validateEmail(form.email)) errs.email = "Invalid email";
     setErrors(errs);
-    return true;
+    return Object.keys(errs).length === 0;
   };
 
-  const metadata = {
-    items: [
-      {
-        name: PRODUCT.name,
-        description: "Basic Tee",
-        quantity,
-        price: PRODUCT.price,
-      },
-    ],
-    customer_email: form.email,
-    ship_to: `${form.name}, ${form.address}, ${form.city}, ${form.state} ${form.postalCode}, ${form.country}`,
-  };
+  // Keep this stable — any change to `metadata` refires the preload query and
+  // opens a race window where `order` is briefly null. Form fields are NOT
+  // included in the preload metadata for that reason; they're fine to record
+  // server-side after payment completes.
+  const metadata = useMemo(
+    () => ({
+      items: [
+        {
+          name: PRODUCT.name,
+          description: "Basic Tee",
+          quantity,
+          unit_price: PRODUCT.price,
+          currency: "USD",
+        },
+      ],
+    }),
+    [quantity],
+  );
 
   return (
     <main className="min-h-screen bg-black px-4 py-10 sm:px-6 lg:px-8">
@@ -204,11 +227,17 @@ function CheckoutInner() {
                 intent={`Pay ${PRODUCT.name}`}
                 toChain={SETTLEMENT_CHAIN}
                 toAddress={RECEIVING_ADDRESS}
-                toAmount={Number(totals.total.toFixed(2))}
+                toAmount={totalAmount}
                 toToken={USDC_BASE}
                 metadata={metadata}
-                onPaymentCreationError={(e: any) => console.error("[Paykit]", e)}
-                onPaymentStarted={() => console.log("[Paykit] started")}
+                onPaymentCreationError={(e: any) => {
+                  console.error("[Paykit]", e);
+                  setPayError(e?.errorMessage ?? "Could not create payment. Check your API key and try again.");
+                }}
+                onPaymentStarted={() => {
+                  setPayError(null);
+                  console.log("[Paykit] started");
+                }}
                 onPaymentCompleted={() => console.log("[Paykit] completed")}
                 onPaymentBounced={() => console.log("[Paykit] bounced")}
               >
@@ -216,18 +245,31 @@ function CheckoutInner() {
                   <button
                     type="button"
                     onClick={() => {
-                      validate();
-                      show();
+                      if (!validate()) return;
+                      setPayError(null);
+                      if (isPayReady) {
+                        show();
+                      } else {
+                        pendingShowRef.current = show;
+                      }
                     }}
-                    className="w-full py-3 uppercase tracking-wider text-xs text-white"
+                    disabled={!isPayReady && pendingShowRef.current != null}
+                    className="w-full py-3 uppercase tracking-wider text-xs text-white disabled:opacity-60 disabled:cursor-wait"
                     style={{
                       background: "linear-gradient(135deg, #ff0033 0%, #cc0029 100%)",
                     }}
                   >
-                    Pay With Crypto · ${totals.total.toFixed(2)}
+                    {isPayReady
+                      ? `Pay With Crypto · $${totals.total.toFixed(2)}`
+                      : pendingShowRef.current
+                        ? "Preparing payment…"
+                        : `Pay With Crypto · $${totals.total.toFixed(2)}`}
                   </button>
                 )}
               </PayButton.Custom>
+              {payError && (
+                <p className="mt-3 text-center text-[11px] text-[#ff6666]">{payError}</p>
+              )}
               <p className="mt-3 text-center text-[10px] text-gray-500">
                 You&apos;ll be redirected to the CoinVoyage modal to complete payment.
               </p>
