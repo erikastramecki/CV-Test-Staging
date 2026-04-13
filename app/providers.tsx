@@ -64,9 +64,13 @@ function DelayedWalletProvider({
     return <WalletReadyContext.Provider value={false}>{children}</WalletReadyContext.Provider>;
   }
 
+  const envVar = process.env.NEXT_PUBLIC_COIN_VOYAGE_ENVIRONMENT;
+  const environment: "local" | "production" | "development" =
+    envVar === "local" || envVar === "development" ? envVar : "production";
+
   return (
     <WalletProvider>
-      <PayKitProvider apiKey={apiKey} mode="dark">
+      <PayKitProvider apiKey={apiKey} environment={environment} mode="dark">
         <WalletReadyContext.Provider value={true}>{children}</WalletReadyContext.Provider>
       </PayKitProvider>
     </WalletProvider>
